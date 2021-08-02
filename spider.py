@@ -30,9 +30,9 @@ def retry(times, sleep=0):
     return decorator
 
 class baixing(object):
-    def __init__(self, url):
-        self._url = url
-        self._id = str
+    def __init__(self, shopid):
+        self._url = "http://spider.battle.baixing.cn/detail/" + shopid
+        self._id = shopid
         self._headers = {'User-agent':
                              'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.182 Safari/537.36',
                          'User-name':
@@ -63,7 +63,7 @@ class baixing(object):
         print(info)
         self._info.append(info)
 
-        response_phone = requests.get(url="http://spider.battle.baixing.cn/shops/"+ "80601236" + "/phone", proxies=proxies, headers=self._headers, verify=False)
+        response_phone = requests.get(url="http://spider.battle.baixing.cn/shops/"+ self._id + "/phone", proxies=proxies, headers=self._headers, verify=False)
         content_phone = json.loads(response_phone.text).get('data')
         self._phone.append(content_phone)
 
@@ -81,7 +81,7 @@ try:
     @retry(3)
     def main():
         shopid = "80601236"
-        data = baixing("http://spider.battle.baixing.cn/detail/80601236")
+        data = baixing(shopid)
         data.extract()
 except Exception as ex:
     print(ex)
