@@ -63,7 +63,7 @@ class baixing(object):
         print(info)
         self._info.append(info)
 
-        response_phone = requests.get(url="http://spider.battle.baixing.cn/shops/"+ self._id + "/phone", proxies=proxies, headers=self._headers, verify=False)
+        response_phone = requests.get(url="http://spider.battle.baixing.cn/shops/"+ "80601236" + "/phone", proxies=proxies, headers=self._headers, verify=False)
         content_phone = json.loads(response_phone.text).get('data')
         self._phone.append(content_phone)
 
