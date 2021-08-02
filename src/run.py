@@ -24,7 +24,7 @@ def main(dataset_fn, output_fn, clusters_no):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run k-means for location data",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--input', type=str, default='NYC_Free_Public_WiFi_03292017.csv',
+    parser.add_argument('--input', type=str, default=r'C:\Users\baixing\PycharmProjects\pythonProject2\data\NYC_Free_Public_WiFi_03292017.csv',
                         dest='input', help='input location file name')
     parser.add_argument('--output', type=str, default='output.csv', dest='output', 
                         help='clusters output file name')
