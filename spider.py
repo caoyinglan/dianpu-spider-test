@@ -1,14 +1,20 @@
 import json
+import re
+
+try:
+    from PIL import Image
+except ImportError:
+    import Image
+import pytesseract
+from io import BytesIO
 
 import requests
 from bs4 import BeautifulSoup
-import re
 import sys
 import time
 import pandas as pd
 import io
 from functools import wraps
-from selenium import webdriver
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -31,7 +37,7 @@ def retry(times, sleep=0):
 
 class baixing(object):
     def __init__(self, shopid):
-        self._url = "http://spider.battle.baixing.cn/detail/" + shopid
+        self._url = "http://spider.test.baixing.cn/detail/" + shopid
         self._id = shopid
         self._headers = {'User-agent':
                              'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.182 Safari/537.36',
@@ -47,25 +53,57 @@ class baixing(object):
         s = requests.session()
         s.keep_alive = False
 
-        proxies = {'http': 'http://LONGZHUASHOU6GBJR1KR0:8CDnVted@http-proxy-t3.dobel.cn:9180',
-                 'https': 'http://LONGZHUASHOU6GBJR1KR0:8CDnVted@http-proxy-t3.dobel.cn:9180'}
+        # http代理接入服务器地址端口
+        proxyHost = "http-proxy-t3.dobel.cn"
+        proxyPort = "9180"
+
+        # 账号密码
+        proxyUser = "LONGZHUASHOU6GBJR1KR0"
+        proxyPass = "8CDnVted"
+
+        proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
+            "host": proxyHost,
+            "port": proxyPort,
+            "user": proxyUser,
+            "pass": proxyPass,
+        }
+
+        proxies = {
+            "http": proxyMeta,
+            "https": proxyMeta,
+        }
+
+
+        '''获取标题title'''
         response = requests.get(self._url, proxies=proxies, headers=self._headers, verify=False)
         response.encoding = "utf-8"
         print(response.status_code)
         response = response.text
         allThings = BeautifulSoup(response, "html.parser")
         content_title = allThings.find_all('div', class_='company_name')
-        pattern1 = re.compile('<a[^>]+href=["\'](.*?)["\']')
-        href = pattern1.findall(str(content_title))
-        print(href)
-        self._href.append(href)
+
         info = content_title[0].get_text(" ", strip=True)
         print(info)
         self._info.append(info)
 
-        response_phone = requests.get(url="http://spider.battle.baixing.cn/shops/"+ self._id + "/phone", proxies=proxies, headers=self._headers, verify=False)
+        '''获取联系人方式（通过点击获得get请求对应的url地址并直接访问）'''
+        response_phone = requests.get(url="http://spider.test.baixing.cn/shops/"+ self._id + "/phone", proxies=proxies, headers=self._headers, verify=False)
         content_phone = json.loads(response_phone.text).get('data')
         self._phone.append(content_phone)
+
+        '''读取图片格式的数字'''
+        response_picture = requests.get(url="http://spider.test.baixing.cn/sprites/ddcb111c.png", proxies=proxies, headers=self._headers, verify=False)
+        response = response_picture.content
+        BytesIOObj = BytesIO()
+        BytesIOObj.write(response)
+        img = Image.open(BytesIOObj)
+        # img.show()
+
+        result = pytesseract.image_to_string(img, config='--psm ' + '6' + '--oem 3 -c tessedit_char_whitelist=0123456789')
+        result = re.findall("\d+",result)[0]
+
+
+        self._info.append(result)
 
 
     def extract(self):
@@ -80,7 +118,7 @@ class baixing(object):
 try:
     @retry(3)
     def main():
-        shopid = "80601236"
+        shopid = "73846799"
         data = baixing(shopid)
         data.extract()
 except Exception as ex:
@@ -98,7 +136,7 @@ def timer(n):
             print(count)
             time.sleep(n)
 
-timer(1)
+timer(5)
 
 
 # if __name__ == '__main__':
